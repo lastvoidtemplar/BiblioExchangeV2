@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db-ui
+  template:
+    metadata:
+      labels:
+        app: db-ui
+    spec:
+      containers:
+        - name: db-ui
+          image: dpage/pgadmin4:8
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PGADMIN_DEFAULT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-ui-secret
+                  key: password
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: "admin@admin.com"
