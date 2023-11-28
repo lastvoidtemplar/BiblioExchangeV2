@@ -20,14 +20,14 @@ spec:
         - name: db
           image: postgres:16.1
           imagePullPolicy: IfNotPresent
-          env:
+          env:            
+            - name: POSTGRES_USER
+              value: "postgres"
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: db-secret
                   key: password
-            - name: POSTGRES_USER
-              value: "postgres"
             - name: PG_DATA
               value: /var/lib/postgresql/data/pgdata
           volumeMounts:
