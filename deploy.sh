@@ -20,6 +20,8 @@ dbPod=$(echo "$pods" | grep -oP "$regex")
 echo
 echo "Creating keycloak database"
 kubectl exec --stdin --tty $dbPod -- /bin/bash -c "psql -U postgres -d postgres -c 'CREATE DATABASE keycloak'"
+echo "Creating library database"
+kubectl exec --stdin --tty $dbPod -- /bin/bash -c "psql -U postgres -d postgres -c 'CREATE DATABASE library'"
 
 echo
 echo "Deploying keycloak..."
