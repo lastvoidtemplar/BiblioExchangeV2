@@ -9,6 +9,7 @@ import (
 	dboptions "github.com/lastvoidtemplar/BiblioExchangeV2/core/db/db_options"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/di/identificators"
 	serveroptions "github.com/lastvoidtemplar/BiblioExchangeV2/core/server/server_options"
+	_ "github.com/lib/pq"
 )
 
 type RouteHandler func(c *Container) echo.HandlerFunc
