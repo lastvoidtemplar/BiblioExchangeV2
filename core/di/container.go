@@ -98,8 +98,9 @@ func (c *Container) MapRoute(verb HTTPVerb, path string, handler RouteHandler) *
 	return c
 }
 
-func (c *Container) InitService(init func(c *Container)) {
+func (c *Container) InitService(init func(c *Container)) *Container {
 	init(c)
+	return c
 }
 
 func (c *Container) RunServer(serverOptions serveroptions.ServerOtions) {
