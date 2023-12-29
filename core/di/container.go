@@ -67,18 +67,20 @@ func (b *ContainerBuilder) Build() *Container {
 	}
 }
 
-func GetService[T any](c *Container, identificator identificators.Identificator) (*T, error) {
+func GetService[T any](c *Container, identificator identificators.Identificator) (T, error) {
+
+	var zeroValue T
 	if _, ok := c.services[identificator]; !ok {
-		return nil, fmt.Errorf("service with identificator '%s' is not found", string(identificator))
+		return zeroValue, fmt.Errorf("service with identificator '%s' is not found", string(identificator))
 	}
 
 	service := c.services[identificator]
 	switch service.(type) {
 	case T:
 		res := service.(T)
-		return &res, nil
+		return res, nil
 	default:
-		return nil, fmt.Errorf("service with identificator '%s' is with not type", string(identificator))
+		return zeroValue, fmt.Errorf("service with identificator '%s' is with not type", string(identificator))
 	}
 
 }
