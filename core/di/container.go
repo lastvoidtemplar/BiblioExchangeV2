@@ -11,7 +11,7 @@ import (
 	serveroptions "github.com/lastvoidtemplar/BiblioExchangeV2/core/server/server_options"
 )
 
-// type RouteHandler func
+type RouteHandler func(c *Container) echo.HandlerFunc
 
 type HTTPVerb int
 
@@ -59,22 +59,6 @@ func (b *ContainerBuilder) AddDatabase(opt dboptions.DatabaseOptions) *Container
 	return b.RegisterService(identificators.Database, db)
 }
 
-func (b *ContainerBuilder) AddRoute(verb HTTPVerb, path string, handler echo.HandlerFunc) *ContainerBuilder {
-	switch verb {
-	case GET:
-		b.server.GET(path, handler)
-	case POST:
-		b.server.POST(path, handler)
-	case PUT:
-		b.server.PUT(path, handler)
-	case PATCH:
-		b.server.PATCH(path, handler)
-	case DELETE:
-		b.server.DELETE(path, handler)
-	}
-	return b
-}
-
 func (b *ContainerBuilder) Build() *Container {
 	return &Container{
 		services: b.services,
@@ -96,6 +80,22 @@ func GetService[T any](c *Container, identificator identificators.Identificator)
 		return nil, fmt.Errorf("service with identificator '%s' is with not type", string(identificator))
 	}
 
+}
+
+func (c *Container) MapRoute(verb HTTPVerb, path string, handler RouteHandler) *Container {
+	switch verb {
+	case GET:
+		c.server.GET(path, handler(c))
+	case POST:
+		c.server.POST(path, handler(c))
+	case PUT:
+		c.server.PUT(path, handler(c))
+	case PATCH:
+		c.server.PATCH(path, handler(c))
+	case DELETE:
+		c.server.DELETE(path, handler(c))
+	}
+	return c
 }
 
 func (c *Container) InitService(init func(c *Container)) {
