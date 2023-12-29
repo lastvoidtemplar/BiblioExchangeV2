@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	dboptions "github.com/lastvoidtemplar/BiblioExchangeV2/core/db/db_options"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/di/identificators"
+	serveroptions "github.com/lastvoidtemplar/BiblioExchangeV2/core/server/server_options"
 )
 
 // type RouteHandler func
@@ -101,6 +102,6 @@ func (c *Container) InitService(init func(c *Container)) {
 	init(c)
 }
 
-func (c *Container) Run(port int) {
-	c.server.Start(fmt.Sprintf(":%d", port))
+func (c *Container) RunServer(serverOptions serveroptions.ServerOtions) {
+	c.server.Start(fmt.Sprintf(":%d", serverOptions.Port))
 }
