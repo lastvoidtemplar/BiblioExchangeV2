@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: db-ui
-          image: dpage/pgadmin4:8
+          image: dpage/pgadmin4:8.1
           imagePullPolicy: IfNotPresent
           env:
             - name: PGADMIN_DEFAULT_PASSWORD
