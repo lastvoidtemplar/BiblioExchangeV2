@@ -5,6 +5,7 @@ go 1.21.1
 require (
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/lastvoidtemplar/BiblioExchangeV2/core v0.0.0-20231231130635-3958780f0087
+	github.com/volatiletech/null/v8 v8.1.2
 
 )
 
@@ -22,7 +23,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/volatiletech/inflect v0.0.1 // indirect
-	github.com/volatiletech/null/v8 v8.1.2 // indirect
 	github.com/volatiletech/randomize v0.0.1 // indirect
 	github.com/volatiletech/sqlboiler/v4 v4.15.0 // indirect
 	github.com/volatiletech/strmangle v0.0.5 // indirect

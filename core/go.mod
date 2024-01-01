@@ -4,6 +4,7 @@ go 1.21.1
 
 require (
 	github.com/friendsofgo/errors v0.9.2
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/kat-co/vala v0.0.0-20170210184112-42e1d8b61f12
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/spf13/viper v1.18.2
@@ -16,7 +17,6 @@ require (
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

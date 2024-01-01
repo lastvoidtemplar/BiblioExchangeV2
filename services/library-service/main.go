@@ -12,8 +12,10 @@ func main() {
 		Build()
 
 	container.UseJWTHandlerMiddleware(config.Config.AuthOptions)
+
 	container.MapRoute(di.GET, "/authors", routes.GetAuthorsPaginated)
 	container.MapRoute(di.GET, "/authors/:id", routes.GetAuthorById)
+	container.MapRoute(di.POST, "/authors", routes.CreateAuthor)
 
 	container.RunServer(config.Config.ServerOptions)
 }
