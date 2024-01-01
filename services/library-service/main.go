@@ -7,9 +7,13 @@ import (
 )
 
 func main() {
+	container := di.New().
+		AddDatabase(config.Config.DatabaseOptions).
+		Build()
 
-	container := di.New().AddDatabase(config.Config.DatabaseOptions).Build()
+	container.UseJWTHandlerMiddleware(config.Config.AuthOptions)
 	container.MapRoute(di.GET, "/authors", routes.GetAuthorsPaginated)
 	container.MapRoute(di.GET, "/authors/:id", routes.GetAuthorById)
+
 	container.RunServer(config.Config.ServerOptions)
 }

@@ -3,6 +3,7 @@ package routes
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/db/queries"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/di"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/di/identificators"
+	"github.com/lastvoidtemplar/BiblioExchangeV2/core/utils"
 )
 
 func GetAuthorsPaginated(c *di.Container) echo.HandlerFunc {
@@ -25,7 +27,7 @@ func GetAuthorsPaginated(c *di.Container) echo.HandlerFunc {
 			return c.String(http.StatusInternalServerError, err.Error())
 		}
 		if authors == nil {
-			return c.String(http.StatusNotFound, "empty")
+			return c.JSON(http.StatusOK, []struct{}{})
 		}
 		return c.JSON(http.StatusOK, authors)
 	}
@@ -50,11 +52,26 @@ func GetAuthorById(c *di.Container) echo.HandlerFunc {
 			return c.String(http.StatusInternalServerError, err.Error())
 		}
 		if author == nil {
-			return c.String(http.StatusNotFound, "empty")
+			return c.String(http.StatusNotFound, "Author with this id isn`t found!")
 		}
 
 		if author.R == nil {
-			return c.String(http.StatusNotFound, "R nil")
+			return c.String(http.StatusNotFound, "Author page ratings are missing!")
+		}
+
+		userId, anonymous, err := utils.GetUserId(c)
+
+		if err != nil {
+			return c.String(http.StatusInternalServerError,
+				fmt.Sprintf("Error: %s!", err.Error()))
+		}
+
+		err = queries.AddAuthorPageView(ctx, db, id, userId, anonymous)
+
+		if err != nil {
+			log.Printf("Error: %s\n", err.Error())
+			return c.String(http.StatusInternalServerError,
+				fmt.Sprintf("Error when adding page view for author with id %s!", id))
 		}
 
 		dto := SingleAuthorDTO{
