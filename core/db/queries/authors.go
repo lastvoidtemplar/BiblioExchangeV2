@@ -3,6 +3,7 @@ package queries
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 
 	dbmodels "github.com/lastvoidtemplar/BiblioExchangeV2/core/db/models"
@@ -50,6 +51,8 @@ func GetAuthorById(ctx context.Context, db *sql.DB, id string) (*dbmodels.Author
 }
 
 func AddAuthorPageView(ctx context.Context, db *sql.DB, authorId string, userId string, anonymous bool) error {
+	fmt.Println(authorId, "  ", userId)
+
 	var authorPageRating dbmodels.Authorpagerating
 	authorPageRating.AuthorID = null.StringFrom(authorId)
 	authorPageRating.RatingType = null.IntFrom(authorPageRatingView)
@@ -64,5 +67,12 @@ func AddAuthorPageView(ctx context.Context, db *sql.DB, authorId string, userId 
 			dbmodels.AuthorpageratingColumns.AuthorRatingID,
 			dbmodels.AuthorpageratingColumns.UserID,
 		))
+
+}
+
+func CreateAuthor(ctx context.Context, db *sql.DB, author *dbmodels.Author) error {
+	err := author.Insert(ctx, db, boil.Blacklist(dbmodels.AuthorColumns.AuthorID))
+
+	return err
 
 }

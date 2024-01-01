@@ -8,11 +8,12 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	dbmodels "github.com/lastvoidtemplar/BiblioExchangeV2/core/db/models"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/db/queries"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/di"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/di/identificators"
+	"github.com/lastvoidtemplar/BiblioExchangeV2/core/server/validation"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/utils"
+	"github.com/lastvoidtemplar/BiblioExchangeV2/library-service/dto"
 )
 
 func GetAuthorsPaginated(c *di.Container) echo.HandlerFunc {
@@ -24,18 +25,13 @@ func GetAuthorsPaginated(c *di.Container) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		authors, err := queries.GetAllAuthors(ctx, db, 1, 10)
 		if err != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 		if authors == nil {
 			return c.JSON(http.StatusOK, []struct{}{})
 		}
 		return c.JSON(http.StatusOK, authors)
 	}
-}
-
-type SingleAuthorDTO struct {
-	dbmodels.Author
-	CountStars int
 }
 
 func GetAuthorById(c *di.Container) echo.HandlerFunc {
@@ -49,35 +45,75 @@ func GetAuthorById(c *di.Container) echo.HandlerFunc {
 
 		author, err := queries.GetAuthorById(ctx, db, id)
 		if err != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 		if author == nil {
-			return c.String(http.StatusNotFound, "Author with this id isn`t found!")
+			return utils.ErrorHandler(c, http.StatusNotFound, "Author with this id isn`t found!")
 		}
 
 		if author.R == nil {
-			return c.String(http.StatusNotFound, "Author page ratings are missing!")
+			return utils.ErrorHandler(c, http.StatusNotFound, "Author page ratings are missing!")
 		}
 
 		userId, anonymous, err := utils.GetUserId(c)
 
 		if err != nil {
-			return c.String(http.StatusInternalServerError,
-				fmt.Sprintf("Error: %s!", err.Error()))
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
 		err = queries.AddAuthorPageView(ctx, db, id, userId, anonymous)
 
 		if err != nil {
 			log.Printf("Error: %s\n", err.Error())
-			return c.String(http.StatusInternalServerError,
+			return utils.ErrorHandler(c, http.StatusInternalServerError,
 				fmt.Sprintf("Error when adding page view for author with id %s!", id))
 		}
 
-		dto := SingleAuthorDTO{
+		dto := dto.SingleAuthorDTO{
 			Author:     *author,
 			CountStars: len(author.R.Authorpageratings),
 		}
 		return c.JSON(http.StatusOK, dto)
+	}
+}
+
+func CreateAuthor(c *di.Container) echo.HandlerFunc {
+	db, err := di.GetService[*sql.DB](c, identificators.Database)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	ctx := context.Background()
+
+	return func(c echo.Context) error {
+		userId, anonymous, err := utils.GetUserId(c)
+
+		if err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+
+		if anonymous {
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create author page!")
+		}
+		var dto dto.AuthorCreateDTO
+
+		if err := c.Bind(&dto); err != nil {
+			return utils.ErrorHandler(c, http.StatusBadRequest, err)
+		}
+
+		if errors := dto.Valid(); !errors.Empty() {
+			return validation.HandleValidationErrors(c, errors)
+		}
+
+		author := dto.Map()
+
+		if err := queries.CreateAuthor(ctx, db, &author); err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+
+		if err := queries.AddAuthorPageView(ctx, db, author.AuthorID, userId, anonymous); err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+
+		return c.NoContent(http.StatusCreated)
 	}
 }
