@@ -4,15 +4,16 @@ go 1.21.1
 
 require (
 	github.com/labstack/echo/v4 v4.11.4
-	github.com/lastvoidtemplar/BiblioExchangeV2/core v0.0.0-20231229122418-0c5dd86549c1
+	github.com/lastvoidtemplar/BiblioExchangeV2/core v0.0.0-20231231130635-3958780f0087
 
 )
 
-replace github.com/lastvoidtemplar/BiblioExchangeV2/core v0.0.0-20231229122418-0c5dd86549c1 => ../../core
+replace github.com/lastvoidtemplar/BiblioExchangeV2/core v0.0.0-20231231130635-3958780f0087 => ../../core
 
 require (
 	github.com/friendsofgo/errors v0.9.2 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
