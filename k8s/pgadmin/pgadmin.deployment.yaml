@@ -1,9 +1,12 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: db-ui
 spec:
+  serviceName: db-ui
   replicas: 1
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: db-ui
@@ -12,9 +15,16 @@ spec:
       labels:
         app: db-ui
     spec:
+      volumes:
+        - name: db-ui-vol
+          persistentVolumeClaim:
+            claimName: db-ui-pvc
+        - name: db-ui-config
+          configMap:
+            name: db-ui-config
       containers:
         - name: db-ui
-          image: dpage/pgadmin4:8.1
+          image: dpage/pgadmin4:8.2
           imagePullPolicy: IfNotPresent
           env:
             - name: PGADMIN_DEFAULT_PASSWORD
@@ -24,3 +34,10 @@ spec:
                   key: password
             - name: PGADMIN_DEFAULT_EMAIL
               value: "admin@admin.com"
+          volumeMounts:
+            - name: db-ui-config
+              mountPath: /pgadmin4/servers.json
+              subPath: servers.json
+              readOnly: true
+            - name: db-ui-vol
+              mountPath: /var/lib/pgadmin
