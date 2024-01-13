@@ -30,7 +30,7 @@ func GetAuthorsPaginated(c *di.Container) echo.HandlerFunc {
 		if authors == nil {
 			return c.JSON(http.StatusOK, []struct{}{})
 		}
-		return c.JSON(http.StatusOK, authors)
+		return c.JSON(http.StatusOK, dto.MapAuthorsAToMinimizedAuthorDTOs(authors))
 	}
 }
 
@@ -69,10 +69,8 @@ func GetAuthorById(c *di.Container) echo.HandlerFunc {
 				fmt.Sprintf("Error when adding page view for author with id %s!", id))
 		}
 
-		dto := dto.SingleAuthorDTO{
-			Author:     *author,
-			CountStars: len(author.R.Authorpageratings),
-		}
+		dto := dto.MapAuthorAToSingleAuthorDTO(author)
+
 		return c.JSON(http.StatusOK, dto)
 	}
 }
@@ -94,7 +92,8 @@ func CreateAuthor(c *di.Container) echo.HandlerFunc {
 		if anonymous {
 			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create author page!")
 		}
-		var dto dto.AuthorCreateDTO
+
+		var dto dto.AuthorBodyDTO
 
 		if err := c.Bind(&dto); err != nil {
 			return utils.ErrorHandler(c, http.StatusBadRequest, err)
@@ -114,6 +113,81 @@ func CreateAuthor(c *di.Container) echo.HandlerFunc {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
-		return c.NoContent(http.StatusCreated)
+		return c.String(http.StatusCreated, fmt.Sprintf("/authors/%s", author.AuthorID))
+	}
+}
+
+func UpdateAuthor(c *di.Container) echo.HandlerFunc {
+	db, err := di.GetService[*sql.DB](c, identificators.Database)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	ctx := context.Background()
+
+	return func(c echo.Context) error {
+		authorId := c.Param("id")
+		_, anonymous, err := utils.GetUserId(c)
+
+		if err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+
+		if anonymous {
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create author page!")
+		}
+		var inDto dto.AuthorBodyDTO
+
+		if err := c.Bind(&inDto); err != nil {
+			return utils.ErrorHandler(c, http.StatusBadRequest, err)
+		}
+
+		if errors := inDto.Valid(); !errors.Empty() {
+			return validation.HandleValidationErrors(c, errors)
+		}
+
+		author := inDto.Map()
+		author.AuthorID = authorId
+
+		if err := queries.UpdateAuthor(ctx, db, &author); err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+
+		outDto := dto.MapAuthorAToSingleAuthorDTO(&author)
+
+		return c.JSON(http.StatusOK, outDto)
+	}
+}
+
+func DeleteAuthor(c *di.Container) echo.HandlerFunc {
+	db, err := di.GetService[*sql.DB](c, identificators.Database)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	ctx := context.Background()
+
+	return func(c echo.Context) error {
+		authorId := c.Param("id")
+		_, anonymous, err := utils.GetUserId(c)
+
+		if anonymous {
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create author page!")
+		}
+
+		if err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+
+		found, err := queries.DeleteAuthor(ctx, db, authorId)
+
+		if err != nil {
+			fmt.Println("err")
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+
+		if !found {
+			return utils.ErrorHandler(c, http.StatusNotFound, "Author with this id isn`t found!")
+		}
+
+		return c.NoContent(http.StatusNoContent)
 	}
 }
