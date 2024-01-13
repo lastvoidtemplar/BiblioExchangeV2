@@ -16,6 +16,8 @@ func main() {
 	container.MapRoute(di.GET, "/authors", routes.GetAuthorsPaginated)
 	container.MapRoute(di.GET, "/authors/:id", routes.GetAuthorById)
 	container.MapRoute(di.POST, "/authors", routes.CreateAuthor)
+	container.MapRoute(di.PUT, "/authors/:id", routes.UpdateAuthor)
+	container.MapRoute(di.DELETE, "/authors/:id", routes.DeleteAuthor)
 
 	container.RunServer(config.Config.ServerOptions)
 }
