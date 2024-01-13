@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"log"
 
 	"github.com/labstack/echo/v4"
 )
@@ -21,19 +20,18 @@ func GetUserId(c echo.Context) (string, bool, error) {
 }
 
 type errorBody struct {
-	error string
+	Message string `json:"message"`
 }
 
 func ErrorHandler(c echo.Context, code int, err any) error {
 	switch res := err.(type) {
 	case error:
-		log.Panicf("Error: %s", res.Error())
 		return c.JSON(code, errorBody{
-			error: res.Error(),
+			Message: res.Error(),
 		})
 	case string:
 		return c.JSON(code, errorBody{
-			error: res,
+			Message: res,
 		})
 	default:
 		return c.String(code, "Invalid error for error handler")

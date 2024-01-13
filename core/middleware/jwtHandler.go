@@ -21,7 +21,7 @@ func CreateJwtHandler(rsaPublicKey *rsa.PublicKey) func(next echo.HandlerFunc) e
 					})
 
 					if err != nil {
-						c.String(http.StatusInternalServerError, err.Error())
+						c.String(http.StatusBadRequest, err.Error())
 						return nil
 					}
 
