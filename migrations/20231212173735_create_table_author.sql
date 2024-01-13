@@ -12,15 +12,15 @@ CREATE TABLE IF NOT EXISTS Author(
 
 CREATE TABLE IF NOT EXISTS AuthorPageRatings(
     author_rating_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    author_id UUID REFERENCES Author(author_id),
+    author_id UUID REFERENCES Author(author_id) ON DELETE CASCADE,
     rating_type INTEGER,
     user_id UUID
 );
 
 CREATE TABLE IF NOT EXISTS AuthorReviews (
     author_reviews_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    root_id UUID REFERENCES AuthorReviews(author_reviews_id),
-    author_id UUID REFERENCES Author(author_id),
+    root_id UUID REFERENCES AuthorReviews(author_reviews_id)  ON DELETE CASCADE,
+    author_id UUID REFERENCES Author(author_id)  ON DELETE CASCADE,
     user_id UUID  NOT NULL,
     content VARCHAR(500)
 ); 

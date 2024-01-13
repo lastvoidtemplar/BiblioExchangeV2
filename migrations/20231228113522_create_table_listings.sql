@@ -11,13 +11,13 @@ CREATE TABLE IF NOT EXISTS Listings (
 
 CREATE TABLE IF NOT EXISTS ListingsURLs (
   resourse_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  listing_id UUID REFERENCES Listings(listing_id),
+  listing_id UUID REFERENCES Listings(listing_id)  ON DELETE CASCADE,
   resourse_URL VARCHAR NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS ListingsBooks (
     resourse_id UUID NOT NULL REFERENCES Listings(listing_id),
-    book_id UUID NOT NULL REFERENCES Books(book_id),
+    book_id UUID NOT NULL REFERENCES Books(book_id)  ON DELETE CASCADE,
     PRIMARY KEY(resourse_id, book_id)
 );
 -- +goose StatementEnd

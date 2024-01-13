@@ -29,7 +29,7 @@ type Book struct {
 	Title             string      `boil:"title" json:"title" toml:"title" yaml:"title"`
 	DateOfPublication null.Time   `boil:"date_of_publication" json:"date_of_publication,omitempty" toml:"date_of_publication" yaml:"date_of_publication,omitempty"`
 	Plot              null.String `boil:"plot" json:"plot,omitempty" toml:"plot" yaml:"plot,omitempty"`
-	Genre             null.Int    `boil:"genre" json:"genre,omitempty" toml:"genre" yaml:"genre,omitempty"`
+	Genre             null.String `boil:"genre" json:"genre,omitempty" toml:"genre" yaml:"genre,omitempty"`
 
 	R *bookR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L bookL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -75,14 +75,14 @@ var BookWhere = struct {
 	Title             whereHelperstring
 	DateOfPublication whereHelpernull_Time
 	Plot              whereHelpernull_String
-	Genre             whereHelpernull_Int
+	Genre             whereHelpernull_String
 }{
 	BookID:            whereHelperstring{field: "\"books\".\"book_id\""},
 	Isbn:              whereHelpernull_String{field: "\"books\".\"isbn\""},
 	Title:             whereHelperstring{field: "\"books\".\"title\""},
 	DateOfPublication: whereHelpernull_Time{field: "\"books\".\"date_of_publication\""},
 	Plot:              whereHelpernull_String{field: "\"books\".\"plot\""},
-	Genre:             whereHelpernull_Int{field: "\"books\".\"genre\""},
+	Genre:             whereHelpernull_String{field: "\"books\".\"genre\""},
 }
 
 // BookRels is where relationship names are stored.
