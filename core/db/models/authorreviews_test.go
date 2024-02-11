@@ -831,7 +831,7 @@ func testAuthorreviewToOneAuthorUsingAuthor(t *testing.T) {
 	var foreign Author
 
 	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, authorreviewDBTypes, true, authorreviewColumnsWithDefault...); err != nil {
+	if err := randomize.Struct(seed, &local, authorreviewDBTypes, false, authorreviewColumnsWithDefault...); err != nil {
 		t.Errorf("Unable to randomize Authorreview struct: %s", err)
 	}
 	if err := randomize.Struct(seed, &foreign, authorDBTypes, false, authorColumnsWithDefault...); err != nil {
@@ -842,7 +842,7 @@ func testAuthorreviewToOneAuthorUsingAuthor(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&local.AuthorID, foreign.AuthorID)
+	local.AuthorID = foreign.AuthorID
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -852,7 +852,7 @@ func testAuthorreviewToOneAuthorUsingAuthor(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !queries.Equal(check.AuthorID, foreign.AuthorID) {
+	if check.AuthorID != foreign.AuthorID {
 		t.Errorf("want: %v, got %v", foreign.AuthorID, check.AuthorID)
 	}
 
@@ -985,7 +985,7 @@ func testAuthorreviewToOneSetOpAuthorUsingAuthor(t *testing.T) {
 		if x.R.Authorreviews[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if !queries.Equal(a.AuthorID, x.AuthorID) {
+		if a.AuthorID != x.AuthorID {
 			t.Error("foreign key was wrong value", a.AuthorID)
 		}
 
@@ -996,63 +996,11 @@ func testAuthorreviewToOneSetOpAuthorUsingAuthor(t *testing.T) {
 			t.Fatal("failed to reload", err)
 		}
 
-		if !queries.Equal(a.AuthorID, x.AuthorID) {
+		if a.AuthorID != x.AuthorID {
 			t.Error("foreign key was wrong value", a.AuthorID, x.AuthorID)
 		}
 	}
 }
-
-func testAuthorreviewToOneRemoveOpAuthorUsingAuthor(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Authorreview
-	var b Author
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, authorreviewDBTypes, false, strmangle.SetComplement(authorreviewPrimaryKeyColumns, authorreviewColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &b, authorDBTypes, false, strmangle.SetComplement(authorPrimaryKeyColumns, authorColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = a.SetAuthor(ctx, tx, true, &b); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = a.RemoveAuthor(ctx, tx, &b); err != nil {
-		t.Error("failed to remove relationship")
-	}
-
-	count, err := a.Author().Count(ctx, tx)
-	if err != nil {
-		t.Error(err)
-	}
-	if count != 0 {
-		t.Error("want no relationships remaining")
-	}
-
-	if a.R.Author != nil {
-		t.Error("R struct entry should be nil")
-	}
-
-	if !queries.IsValuerNil(a.AuthorID) {
-		t.Error("foreign key value should be nil")
-	}
-
-	if len(b.R.Authorreviews) != 0 {
-		t.Error("failed to remove a from b's relationships")
-	}
-}
-
 func testAuthorreviewToOneSetOpAuthorreviewUsingRoot(t *testing.T) {
 	var err error
 

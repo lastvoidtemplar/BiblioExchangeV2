@@ -31,6 +31,10 @@ func CreateJwtHandler(rsaPublicKey *rsa.PublicKey) func(next echo.HandlerFunc) e
 					}
 
 					c.Set("userId", claims["sub"])
+
+					realm_access := claims["realm_access"].(map[string]any)
+					roles := realm_access["roles"].([]any)
+					c.Set("roles", roles[3:])
 				}
 
 			}

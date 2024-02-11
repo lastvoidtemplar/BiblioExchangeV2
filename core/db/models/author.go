@@ -745,7 +745,7 @@ func (authorL) LoadAuthorreviews(ctx context.Context, e boil.ContextExecutor, si
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.AuthorID) {
+				if a == obj.AuthorID {
 					continue Outer
 				}
 			}
@@ -803,7 +803,7 @@ func (authorL) LoadAuthorreviews(ctx context.Context, e boil.ContextExecutor, si
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if queries.Equal(local.AuthorID, foreign.AuthorID) {
+			if local.AuthorID == foreign.AuthorID {
 				local.R.Authorreviews = append(local.R.Authorreviews, foreign)
 				if foreign.R == nil {
 					foreign.R = &authorreviewR{}
@@ -1120,7 +1120,7 @@ func (o *Author) AddAuthorreviews(ctx context.Context, exec boil.ContextExecutor
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.AuthorID, o.AuthorID)
+			rel.AuthorID = o.AuthorID
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
@@ -1141,7 +1141,7 @@ func (o *Author) AddAuthorreviews(ctx context.Context, exec boil.ContextExecutor
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			queries.Assign(&rel.AuthorID, o.AuthorID)
+			rel.AuthorID = o.AuthorID
 		}
 	}
 
@@ -1162,99 +1162,6 @@ func (o *Author) AddAuthorreviews(ctx context.Context, exec boil.ContextExecutor
 			rel.R.Author = o
 		}
 	}
-	return nil
-}
-
-// SetAuthorreviewsG removes all previously related items of the
-// author replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.Author's Authorreviews accordingly.
-// Replaces o.R.Authorreviews with related.
-// Sets related.R.Author's Authorreviews accordingly.
-// Uses the global database handle.
-func (o *Author) SetAuthorreviewsG(ctx context.Context, insert bool, related ...*Authorreview) error {
-	return o.SetAuthorreviews(ctx, boil.GetContextDB(), insert, related...)
-}
-
-// SetAuthorreviews removes all previously related items of the
-// author replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.Author's Authorreviews accordingly.
-// Replaces o.R.Authorreviews with related.
-// Sets related.R.Author's Authorreviews accordingly.
-func (o *Author) SetAuthorreviews(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Authorreview) error {
-	query := "update \"authorreviews\" set \"author_id\" = null where \"author_id\" = $1"
-	values := []interface{}{o.AuthorID}
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, query)
-		fmt.Fprintln(writer, values)
-	}
-	_, err := exec.ExecContext(ctx, query, values...)
-	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
-	}
-
-	if o.R != nil {
-		for _, rel := range o.R.Authorreviews {
-			queries.SetScanner(&rel.AuthorID, nil)
-			if rel.R == nil {
-				continue
-			}
-
-			rel.R.Author = nil
-		}
-		o.R.Authorreviews = nil
-	}
-
-	return o.AddAuthorreviews(ctx, exec, insert, related...)
-}
-
-// RemoveAuthorreviewsG relationships from objects passed in.
-// Removes related items from R.Authorreviews (uses pointer comparison, removal does not keep order)
-// Sets related.R.Author.
-// Uses the global database handle.
-func (o *Author) RemoveAuthorreviewsG(ctx context.Context, related ...*Authorreview) error {
-	return o.RemoveAuthorreviews(ctx, boil.GetContextDB(), related...)
-}
-
-// RemoveAuthorreviews relationships from objects passed in.
-// Removes related items from R.Authorreviews (uses pointer comparison, removal does not keep order)
-// Sets related.R.Author.
-func (o *Author) RemoveAuthorreviews(ctx context.Context, exec boil.ContextExecutor, related ...*Authorreview) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	for _, rel := range related {
-		queries.SetScanner(&rel.AuthorID, nil)
-		if rel.R != nil {
-			rel.R.Author = nil
-		}
-		if _, err = rel.Update(ctx, exec, boil.Whitelist("author_id")); err != nil {
-			return err
-		}
-	}
-	if o.R == nil {
-		return nil
-	}
-
-	for _, rel := range related {
-		for i, ri := range o.R.Authorreviews {
-			if rel != ri {
-				continue
-			}
-
-			ln := len(o.R.Authorreviews)
-			if ln > 1 && i < ln-1 {
-				o.R.Authorreviews[i] = o.R.Authorreviews[ln-1]
-			}
-			o.R.Authorreviews = o.R.Authorreviews[:ln-1]
-			break
-		}
-	}
-
 	return nil
 }
 

@@ -12,16 +12,17 @@ import (
 )
 
 type MinimizedAuthorDTO struct {
-	AuthorId     string
-	Fullname     string
-	CountBooks   int
-	CountStars   int
-	CountReviews int
+	AuthorId     string `json:"author_id"`
+	Fullname     string `json:"fullname"`
+	CountBooks   int    `json:"book_count"`
+	CountStars   int    `json:"star_count"`
+	CountReviews int    `json:"review_count"`
 }
 
 func MapAuthorsAToMinimizedAuthorDTOs(authors dbmodels.AuthorSlice) []MinimizedAuthorDTO {
 	dtos := make([]MinimizedAuthorDTO, 0, len(authors))
 	for _, v := range authors {
+		log.Println(v.R.Authorpageratings)
 		dtos = append(dtos, MinimizedAuthorDTO{
 			AuthorId:     v.AuthorID,
 			Fullname:     v.Fullname,
@@ -35,9 +36,10 @@ func MapAuthorsAToMinimizedAuthorDTOs(authors dbmodels.AuthorSlice) []MinimizedA
 
 type SingleAuthorDTO struct {
 	dbmodels.Author
-	AuthorBooks []MinimizedBookDTO
-	CountViews  int
-	CountStars  int
+	AuthorBooks   []MinimizedBookDTO  `json:"books"`
+	AuthorReviews []*DisplayReviewDto `json:"reviews"`
+	CountViews    int                 `json:"view_count"`
+	CountStars    int                 `json:"star_count"`
 }
 
 func MapAuthorAToSingleAuthorDTO(author *dbmodels.Author) SingleAuthorDTO {
@@ -52,22 +54,22 @@ func MapAuthorAToSingleAuthorDTO(author *dbmodels.Author) SingleAuthorDTO {
 			}
 		}
 	}
-	log.Println(len(author.R.Books))
 	return SingleAuthorDTO{
-		Author:      *author,
-		AuthorBooks: MapBooksAToMinimizedBookDTOs(author.R.Books),
-		CountStars:  countStars,
-		CountViews:  countViews,
+		Author:        *author,
+		AuthorBooks:   MapBooksAToMinimizedBookDTOs(author.R.Books),
+		AuthorReviews: MapAuthorReviewSliceToDisplayReviewDtoTree(author.R.Authorreviews),
+		CountStars:    countStars,
+		CountViews:    countViews,
 	}
 }
 
 type AuthorBodyDTO struct {
-	Fullname     string     `json:"fullname"`
-	Biography    string     `json:"biography"`
-	DateOfBirth  *time.Time `json:"date_of_birth"`
-	PlaceOfBirth string     `json:"place_of_birth"`
-	DateOfDeath  *time.Time `json:"date_of_death"`
-	PlaceOfDeath string     `json:"place_of_death"`
+	Fullname     string `json:"fullname"`
+	Biography    string `json:"biography"`
+	DateOfBirth  string `json:"date_of_birth"`
+	PlaceOfBirth string `json:"place_of_birth"`
+	DateOfDeath  string `json:"date_of_death"`
+	PlaceOfDeath string `json:"place_of_death"`
 }
 
 func (dto *AuthorBodyDTO) Valid() (errors validation.ValidationErrorsSlice) {
@@ -79,6 +81,12 @@ func (dto *AuthorBodyDTO) Valid() (errors validation.ValidationErrorsSlice) {
 		errors.Add(fmt.Errorf("author fullname must be shorter than 100 characters"))
 	}
 
+	if dto.DateOfBirth != "" {
+		if _, err := time.Parse(time.RFC3339, dto.DateOfBirth); err != nil {
+			errors.Add(fmt.Errorf("author dateOfBirth must be in RFC-3339 / ISO-8601 format"))
+		}
+	}
+
 	return
 }
 
@@ -86,16 +94,18 @@ func (dto *AuthorBodyDTO) Map() (author dbmodels.Author) {
 	author.Fullname = dto.Fullname
 	author.Biography = dto.Biography
 
-	if dto.DateOfBirth != nil {
-		author.DateOfBirth = null.TimeFrom(*dto.DateOfBirth)
+	if dto.DateOfBirth != "" {
+		dateOfBirth, _ := time.Parse(time.RFC3339, dto.DateOfBirth)
+		author.DateOfBirth = null.TimeFrom(dateOfBirth)
 	}
 
 	if dto.PlaceOfBirth != "" {
 		author.PlaceOfBirth = null.StringFrom(dto.PlaceOfBirth)
 	}
 
-	if dto.DateOfDeath != nil {
-		author.DateOfDeath = null.TimeFrom(*dto.DateOfDeath)
+	if dto.DateOfDeath != "" {
+		dateOfDeath, _ := time.Parse(time.RFC3339, dto.DateOfDeath)
+		author.DateOfDeath = null.TimeFrom(dateOfDeath)
 	}
 
 	if dto.PlaceOfDeath != "" {

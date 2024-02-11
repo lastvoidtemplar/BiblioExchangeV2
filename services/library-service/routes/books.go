@@ -17,19 +17,20 @@ import (
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/server/validation"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/utils"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/library-service/dto"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-func GetAuthorsPaginated(c *di.Container) echo.HandlerFunc {
+func GetBooksPaginated(c *di.Container) echo.HandlerFunc {
 	db, err := di.GetService[*sql.DB](c, identificators.Database)
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	return func(c echo.Context) error {
 		ctx := context.Background()
 		page := 1
 		limit := 10
+		authorId := c.Param("id")
 		pageStr := c.QueryParam("page")
 		limitStr := c.QueryParam("limit")
 		if parsePageInt, err := strconv.Atoi(pageStr); err == nil {
@@ -38,18 +39,32 @@ func GetAuthorsPaginated(c *di.Container) echo.HandlerFunc {
 		if parseLimitInt, err := strconv.Atoi(limitStr); err == nil {
 			limit = parseLimitInt
 		}
-		authors, err := queries.GetAllAuthors(ctx, db, page, limit)
+
+		tx, err := db.BeginTx(ctx, &sql.TxOptions{})
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
-		if authors == nil {
-			return c.NoContent(http.StatusNotFound)
+		defer tx.Rollback()
+
+		exist, err := dbmodels.AuthorExists(ctx, tx, authorId)
+		if err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
-		return c.JSON(http.StatusOK, dto.MapAuthorsAToMinimizedAuthorDTOs(authors))
+		if !exist {
+			return utils.ErrorHandler(c, http.StatusBadRequest, "Wrong book id")
+		}
+
+		books, err := queries.GetAllBooks(ctx, tx, authorId, page, limit)
+
+		if err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+		tx.Commit()
+		return c.JSON(http.StatusOK, dto.MapBooksAToMinimizedBookDTOs(books))
 	}
 }
 
-func GetAuthorById(c *di.Container) echo.HandlerFunc {
+func GetBookById(c *di.Container) echo.HandlerFunc {
 	db, err := di.GetService[*sql.DB](c, identificators.Database)
 	if err != nil {
 		log.Fatalln(err)
@@ -59,16 +74,16 @@ func GetAuthorById(c *di.Container) echo.HandlerFunc {
 		ctx := context.Background()
 		id := c.Param("id")
 
-		author, err := queries.GetAuthorById(ctx, db, id)
+		book, err := queries.GetBookById(ctx, db, id)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return utils.ErrorHandler(c, http.StatusNotFound, "Author with this id isn`t found!")
+				return utils.ErrorHandler(c, http.StatusNotFound, "Book with this id isn`t found!")
 			}
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
-		if author.R == nil {
-			return utils.ErrorHandler(c, http.StatusNotFound, "Author page ratings are missing!")
+		if book.R == nil {
+			return utils.ErrorHandler(c, http.StatusNotFound, "Book page ratings are missing!")
 		}
 
 		userId, anonymous, err := utils.GetUserId(c)
@@ -77,38 +92,39 @@ func GetAuthorById(c *di.Container) echo.HandlerFunc {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
-		err = queries.AddAuthorPageView(ctx, db, id, userId, anonymous)
+		err = queries.AddBookPageView(ctx, db, id, userId, anonymous)
 
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError,
-				fmt.Sprintf("Error when adding page view for author with id %s!", id))
+				fmt.Sprintf("Error when adding page view for book with id %s!", id))
 		}
 
-		dto := dto.MapAuthorAToSingleAuthorDTO(author)
+		dto := dto.MapFromBook(book)
 
 		return c.JSON(http.StatusOK, dto)
 	}
 }
 
-func CreateAuthor(c *di.Container) echo.HandlerFunc {
+func CreateBookById(c *di.Container) echo.HandlerFunc {
 	db, err := di.GetService[*sql.DB](c, identificators.Database)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	return func(c echo.Context) error {
 		ctx := context.Background()
+
 		userId, anonymous, err := utils.GetUserId(c)
+		authorId := c.Param("id")
 
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
 		if anonymous {
-			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create author page!")
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create book page!")
 		}
 
-		var dto dto.AuthorBodyDTO
+		var dto dto.BookBodyDTO
 
 		if err := c.Bind(&dto); err != nil {
 			return utils.ErrorHandler(c, http.StatusBadRequest, err)
@@ -118,27 +134,33 @@ func CreateAuthor(c *di.Container) echo.HandlerFunc {
 			return validation.HandleValidationErrors(c, errors)
 		}
 
-		author := dto.Map()
+		book := dto.Map()
 
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{})
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 		defer tx.Rollback()
-
-		if err := queries.CreateAuthor(ctx, tx, &author); err != nil {
+		exist, err := dbmodels.AuthorExists(ctx, tx, authorId)
+		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
+		if !exist {
+			return utils.ErrorHandler(c, http.StatusBadRequest, "Wrong book id")
+		}
 
-		if err := queries.AddAuthorPageView(ctx, tx, author.AuthorID, userId, anonymous); err != nil {
+		if err := queries.CreateBook(ctx, tx, &book, authorId); err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+		if err := queries.AddBookPageView(ctx, tx, book.BookID, userId, anonymous); err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 		tx.Commit()
-		return c.String(http.StatusCreated, fmt.Sprintf("/authors/%s", author.AuthorID))
+		return c.String(http.StatusCreated, fmt.Sprintf("/books/%s", book.BookID))
 	}
 }
 
-func UpdateAuthor(c *di.Container) echo.HandlerFunc {
+func UpdateBook(c *di.Container) echo.HandlerFunc {
 	db, err := di.GetService[*sql.DB](c, identificators.Database)
 	if err != nil {
 		log.Fatalln(err)
@@ -146,7 +168,7 @@ func UpdateAuthor(c *di.Container) echo.HandlerFunc {
 
 	return func(c echo.Context) error {
 		ctx := context.Background()
-		authorId := c.Param("id")
+		bookId := c.Param("id")
 		_, anonymous, err := utils.GetUserId(c)
 
 		if err != nil {
@@ -154,9 +176,9 @@ func UpdateAuthor(c *di.Container) echo.HandlerFunc {
 		}
 
 		if anonymous {
-			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create author page!")
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create book page!")
 		}
-		var inDto dto.AuthorBodyDTO
+		var inDto dto.BookBodyDTO
 
 		if err := c.Bind(&inDto); err != nil {
 			return utils.ErrorHandler(c, http.StatusBadRequest, err)
@@ -166,25 +188,38 @@ func UpdateAuthor(c *di.Container) echo.HandlerFunc {
 			return validation.HandleValidationErrors(c, errors)
 		}
 
-		author := inDto.Map()
-		author.AuthorID = authorId
+		book := inDto.Map()
 
-		updatedAuthor, found, err := queries.UpdateAuthor(ctx, db, &author)
+		tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+		if err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+		defer tx.Rollback()
+
+		exist, err := dbmodels.BookExists(ctx, tx, bookId)
+
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
-		if !found {
-			return utils.ErrorHandler(c, http.StatusNotFound, "Author with this id isn`t found!")
+		if !exist {
+			return utils.ErrorHandler(c, http.StatusNotFound, "Book with this id isn`t found!")
 		}
 
-		outDto := dto.MapAuthorAToSingleAuthorDTO(updatedAuthor)
+		book.BookID = bookId
+
+		updatedBook, err := queries.UpdateBook(ctx, tx, &book)
+		if err != nil {
+			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
+		}
+		tx.Commit()
+		outDto := dto.MapFromBook(updatedBook)
 
 		return c.JSON(http.StatusOK, outDto)
 	}
 }
 
-func DeleteAuthor(c *di.Container) echo.HandlerFunc {
+func DeleteBook(c *di.Container) echo.HandlerFunc {
 	db, err := di.GetService[*sql.DB](c, identificators.Database)
 	if err != nil {
 		log.Fatalln(err)
@@ -192,11 +227,11 @@ func DeleteAuthor(c *di.Container) echo.HandlerFunc {
 
 	return func(c echo.Context) error {
 		ctx := context.Background()
-		authorId := c.Param("id")
+		bookId := c.Param("id")
 		_, anonymous, err := utils.GetUserId(c)
 
 		if anonymous {
-			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create author page!")
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to create book page!")
 		}
 
 		if err != nil {
@@ -218,27 +253,24 @@ func DeleteAuthor(c *di.Container) echo.HandlerFunc {
 		}
 
 		if !hasCorrectRole {
-			return utils.ErrorHandler(c, http.StatusForbidden, "Admin role is required to delete an author")
+			return utils.ErrorHandler(c, http.StatusForbidden, "Admin role is required to delete an book")
 		}
 
-		found, err := queries.DeleteAuthor(ctx, db, authorId)
+		found, err := queries.DeleteBook(ctx, db, bookId)
 
 		if err != nil {
-			if err == queries.ErrAuthorHasBooks {
-				return utils.ErrorHandler(c, http.StatusBadRequest, err)
-			}
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
 		if !found {
-			return utils.ErrorHandler(c, http.StatusNotFound, "Author with this id isn`t found!")
+			return utils.ErrorHandler(c, http.StatusNotFound, "Book with this id isn`t found!")
 		}
 
 		return c.NoContent(http.StatusNoContent)
 	}
 }
 
-func ToggleAuthorStarRating(c *di.Container) echo.HandlerFunc {
+func ToggleBookStarRating(c *di.Container) echo.HandlerFunc {
 	db, err := di.GetService[*sql.DB](c, identificators.Database)
 	if err != nil {
 		log.Fatalln(err)
@@ -246,7 +278,7 @@ func ToggleAuthorStarRating(c *di.Container) echo.HandlerFunc {
 
 	return func(c echo.Context) error {
 		ctx := context.Background()
-		authorId := c.Param("id")
+		bookId := c.Param("id")
 		userId, anonymous, err := utils.GetUserId(c)
 
 		if err != nil {
@@ -254,25 +286,25 @@ func ToggleAuthorStarRating(c *di.Container) echo.HandlerFunc {
 		}
 
 		if anonymous {
-			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to star author page!")
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to star book page!")
 		}
 
-		starred, authorFound, err := queries.ToggleStarRatingOnAuthorPage(ctx, db, authorId, userId)
+		starred, bookFound, err := queries.ToggleStarRatingOnBookPage(ctx, db, bookId, userId)
 
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
-		if !authorFound {
+		if !bookFound {
 			return utils.ErrorHandler(c, http.StatusNotFound,
-				fmt.Errorf("author with id %s was not found", authorId))
+				fmt.Errorf("book with id %s was not found", bookId))
 		}
 
 		return c.JSON(http.StatusOK, dto.CreateStarDTO(starred))
 	}
 }
 
-func CreateAuthorReview(c *di.Container) echo.HandlerFunc {
+func CreateBookReview(c *di.Container) echo.HandlerFunc {
 	db, err := di.GetService[*sql.DB](c, identificators.Database)
 	if err != nil {
 		log.Fatalln(err)
@@ -280,7 +312,7 @@ func CreateAuthorReview(c *di.Container) echo.HandlerFunc {
 
 	return func(c echo.Context) error {
 		ctx := context.Background()
-		authorId := c.Param("id")
+		bookId := c.Param("id")
 		rootId := c.QueryParam("rootId")
 		userId, anonymous, err := utils.GetUserId(c)
 
@@ -289,7 +321,7 @@ func CreateAuthorReview(c *di.Container) echo.HandlerFunc {
 		}
 
 		if anonymous {
-			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to star author page!")
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to star book page!")
 		}
 
 		var dto dto.ReviewBodyDto
@@ -308,37 +340,38 @@ func CreateAuthorReview(c *di.Container) echo.HandlerFunc {
 		}
 		defer tx.Rollback()
 		if rootId != "" {
-			reviewOnAuthorExist, err := queries.ExistAuthorReviewOnSpecificAuthor(ctx, tx, rootId, authorId)
+			reviewOnBookExist, err := queries.ExistBookReviewOnSpecificBook(ctx, tx, rootId, bookId)
 
 			if err != nil {
 				return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 			}
 
-			if !reviewOnAuthorExist {
-				return utils.ErrorHandler(c, http.StatusBadRequest, "The root review isn`t on that author!")
+			if !reviewOnBookExist {
+				return utils.ErrorHandler(c, http.StatusBadRequest, "The root review isn`t on that book!")
 			}
 		}
-		reviewId, authorFound, rootFound, err := queries.CreateAuthorReview(ctx, tx, authorId, userId, dto.Content, rootId)
+		reviewId, bookFound, rootFound, err := queries.CreateBookReview(
+			ctx, tx, bookId, userId, dto.Content, rootId)
 
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
-		if !authorFound {
+		if !bookFound {
 			return utils.ErrorHandler(c, http.StatusNotFound,
-				fmt.Errorf("author with id %s was not found", authorId))
+				fmt.Errorf("book with id %s was not found", bookId))
 		}
 
 		if !rootFound {
 			return utils.ErrorHandler(c, http.StatusNotFound,
-				fmt.Errorf("author review with id %s was not found", rootId))
+				fmt.Errorf("book review with id %s was not found", rootId))
 		}
 		tx.Commit()
-		return c.String(http.StatusCreated, fmt.Sprintf("/authors/%s/review/%s", authorId, reviewId))
+		return c.String(http.StatusCreated, fmt.Sprintf("/books/%s/review/%s", bookId, reviewId))
 	}
 }
 
-func UpdateAuthorReview(c *di.Container) echo.HandlerFunc {
+func UpdateBookReview(c *di.Container) echo.HandlerFunc {
 	db, err := di.GetService[*sql.DB](c, identificators.Database)
 	if err != nil {
 		log.Fatalln(err)
@@ -354,7 +387,7 @@ func UpdateAuthorReview(c *di.Container) echo.HandlerFunc {
 		}
 
 		if anonymous {
-			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to star author page!")
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to star book page!")
 		}
 
 		var dto dto.ReviewBodyDto
@@ -374,17 +407,17 @@ func UpdateAuthorReview(c *di.Container) echo.HandlerFunc {
 		}
 		defer tx.Rollback()
 
-		exist, err := dbmodels.AuthorreviewExists(ctx, tx, reviewId)
+		exist, err := dbmodels.BookreviewExists(ctx, tx, reviewId)
 
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
 		if !exist {
-			return utils.ErrorHandler(c, http.StatusBadRequest, "Wrong author review id")
+			return utils.ErrorHandler(c, http.StatusBadRequest, "Wrong book review id")
 		}
 
-		review, err := queries.GetAuthorReviewById(ctx, tx, reviewId)
+		review, err := queries.GetBookReviewById(ctx, tx, reviewId)
 
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
@@ -394,7 +427,7 @@ func UpdateAuthorReview(c *di.Container) echo.HandlerFunc {
 			return utils.ErrorHandler(c, http.StatusForbidden, "Only the creator of the review can edit the review!")
 		}
 
-		review.Content = null.StringFrom(dto.Content)
+		review.Content = dto.Content
 		_, err = review.Update(ctx, tx, boil.Infer())
 
 		if err != nil {
@@ -406,7 +439,7 @@ func UpdateAuthorReview(c *di.Container) echo.HandlerFunc {
 	}
 }
 
-func DeleteAuthorReview(c *di.Container) echo.HandlerFunc {
+func DeleteBookReview(c *di.Container) echo.HandlerFunc {
 	db, err := di.GetService[*sql.DB](c, identificators.Database)
 	if err != nil {
 		log.Fatalln(err)
@@ -421,7 +454,7 @@ func DeleteAuthorReview(c *di.Container) echo.HandlerFunc {
 		}
 
 		if anonymous {
-			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to star author page!")
+			return utils.ErrorHandler(c, http.StatusUnauthorized, "Must sign-in to star book page!")
 		}
 
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{})
@@ -430,17 +463,17 @@ func DeleteAuthorReview(c *di.Container) echo.HandlerFunc {
 		}
 		defer tx.Rollback()
 
-		exist, err := dbmodels.AuthorreviewExists(ctx, tx, reviewId)
+		exist, err := dbmodels.BookreviewExists(ctx, tx, reviewId)
 
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 
 		if !exist {
-			return utils.ErrorHandler(c, http.StatusBadRequest, "Wrong author review id")
+			return utils.ErrorHandler(c, http.StatusBadRequest, "Wrong book review id")
 		}
 
-		review, err := queries.GetAuthorReviewById(ctx, tx, reviewId)
+		review, err := queries.GetBookReviewById(ctx, tx, reviewId)
 
 		if err != nil {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
