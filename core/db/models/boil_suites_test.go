@@ -225,7 +225,6 @@ func TestToOneSet(t *testing.T) {
 // or deadlocks can occur.
 func TestToOneRemove(t *testing.T) {
 	t.Run("AuthorpageratingToAuthorUsingAuthorpageratings", testAuthorpageratingToOneRemoveOpAuthorUsingAuthor)
-	t.Run("AuthorreviewToAuthorUsingAuthorreviews", testAuthorreviewToOneRemoveOpAuthorUsingAuthor)
 	t.Run("AuthorreviewToAuthorreviewUsingRootAuthorreviews", testAuthorreviewToOneRemoveOpAuthorreviewUsingRoot)
 	t.Run("BookpageratingToBookUsingBookpageratings", testBookpageratingToOneRemoveOpBookUsingBook)
 	t.Run("BookreviewToBookUsingBookreviews", testBookreviewToOneRemoveOpBookUsingBook)
@@ -261,7 +260,6 @@ func TestToManyAdd(t *testing.T) {
 // or deadlocks can occur.
 func TestToManySet(t *testing.T) {
 	t.Run("AuthorToAuthorpageratings", testAuthorToManySetOpAuthorpageratings)
-	t.Run("AuthorToAuthorreviews", testAuthorToManySetOpAuthorreviews)
 	t.Run("AuthorToBooks", testAuthorToManySetOpBooks)
 	t.Run("AuthorreviewToRootAuthorreviews", testAuthorreviewToManySetOpRootAuthorreviews)
 	t.Run("BookreviewToRootBookreviews", testBookreviewToManySetOpRootBookreviews)
@@ -277,7 +275,6 @@ func TestToManySet(t *testing.T) {
 // or deadlocks can occur.
 func TestToManyRemove(t *testing.T) {
 	t.Run("AuthorToAuthorpageratings", testAuthorToManyRemoveOpAuthorpageratings)
-	t.Run("AuthorToAuthorreviews", testAuthorToManyRemoveOpAuthorreviews)
 	t.Run("AuthorToBooks", testAuthorToManyRemoveOpBooks)
 	t.Run("AuthorreviewToRootAuthorreviews", testAuthorreviewToManyRemoveOpRootAuthorreviews)
 	t.Run("BookreviewToRootBookreviews", testBookreviewToManyRemoveOpRootBookreviews)

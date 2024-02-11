@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        function DisplayDateISO(){
+            const input = document.getElementById("input")
+            const output = document.getElementById("output")
+            const date =  new Date(input.value)
+            output.innerText = date.toISOString()
+        }
+    </script>
+    <input type="date" id="input">
+    <label id="output"></label>
+    <button onclick="DisplayDateISO()">Click</button>
+</body>
+</html>

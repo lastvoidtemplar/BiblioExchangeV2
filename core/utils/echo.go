@@ -19,6 +19,28 @@ func GetUserId(c echo.Context) (string, bool, error) {
 	}
 }
 
+func GetUserRoles(c echo.Context) ([]string, error) {
+	roles := c.Get("roles")
+
+	switch res := roles.(type) {
+	case []string:
+		return res, nil
+	case []any:
+		rolesStrSl := make([]string, 0, len(res))
+		for _, v := range res {
+			var role string
+			var ok bool
+			if role, ok = v.(string); !ok {
+				return nil, errors.New("role must be string")
+			}
+			rolesStrSl = append(rolesStrSl, role)
+		}
+		return rolesStrSl, nil
+	default:
+		return nil, errors.New("roles is wrong type")
+	}
+}
+
 type errorBody struct {
 	Message string `json:"message"`
 }

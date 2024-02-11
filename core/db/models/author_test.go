@@ -596,8 +596,9 @@ func testAuthorToManyAuthorreviews(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&b.AuthorID, a.AuthorID)
-	queries.Assign(&c.AuthorID, a.AuthorID)
+	b.AuthorID = a.AuthorID
+	c.AuthorID = a.AuthorID
+
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -612,10 +613,10 @@ func testAuthorToManyAuthorreviews(t *testing.T) {
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if queries.Equal(v.AuthorID, b.AuthorID) {
+		if v.AuthorID == b.AuthorID {
 			bFound = true
 		}
-		if queries.Equal(v.AuthorID, c.AuthorID) {
+		if v.AuthorID == c.AuthorID {
 			cFound = true
 		}
 	}
@@ -1028,10 +1029,10 @@ func testAuthorToManyAddOpAuthorreviews(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if !queries.Equal(a.AuthorID, first.AuthorID) {
+		if a.AuthorID != first.AuthorID {
 			t.Error("foreign key was wrong value", a.AuthorID, first.AuthorID)
 		}
-		if !queries.Equal(a.AuthorID, second.AuthorID) {
+		if a.AuthorID != second.AuthorID {
 			t.Error("foreign key was wrong value", a.AuthorID, second.AuthorID)
 		}
 
@@ -1058,182 +1059,6 @@ func testAuthorToManyAddOpAuthorreviews(t *testing.T) {
 		}
 	}
 }
-
-func testAuthorToManySetOpAuthorreviews(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Author
-	var b, c, d, e Authorreview
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, authorDBTypes, false, strmangle.SetComplement(authorPrimaryKeyColumns, authorColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	foreigners := []*Authorreview{&b, &c, &d, &e}
-	for _, x := range foreigners {
-		if err = randomize.Struct(seed, x, authorreviewDBTypes, false, strmangle.SetComplement(authorreviewPrimaryKeyColumns, authorreviewColumnsWithoutDefault)...); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	err = a.SetAuthorreviews(ctx, tx, false, &b, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err := a.Authorreviews().Count(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 2 {
-		t.Error("count was wrong:", count)
-	}
-
-	err = a.SetAuthorreviews(ctx, tx, true, &d, &e)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err = a.Authorreviews().Count(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 2 {
-		t.Error("count was wrong:", count)
-	}
-
-	if !queries.IsValuerNil(b.AuthorID) {
-		t.Error("want b's foreign key value to be nil")
-	}
-	if !queries.IsValuerNil(c.AuthorID) {
-		t.Error("want c's foreign key value to be nil")
-	}
-	if !queries.Equal(a.AuthorID, d.AuthorID) {
-		t.Error("foreign key was wrong value", a.AuthorID, d.AuthorID)
-	}
-	if !queries.Equal(a.AuthorID, e.AuthorID) {
-		t.Error("foreign key was wrong value", a.AuthorID, e.AuthorID)
-	}
-
-	if b.R.Author != nil {
-		t.Error("relationship was not removed properly from the foreign struct")
-	}
-	if c.R.Author != nil {
-		t.Error("relationship was not removed properly from the foreign struct")
-	}
-	if d.R.Author != &a {
-		t.Error("relationship was not added properly to the foreign struct")
-	}
-	if e.R.Author != &a {
-		t.Error("relationship was not added properly to the foreign struct")
-	}
-
-	if a.R.Authorreviews[0] != &d {
-		t.Error("relationship struct slice not set to correct value")
-	}
-	if a.R.Authorreviews[1] != &e {
-		t.Error("relationship struct slice not set to correct value")
-	}
-}
-
-func testAuthorToManyRemoveOpAuthorreviews(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Author
-	var b, c, d, e Authorreview
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, authorDBTypes, false, strmangle.SetComplement(authorPrimaryKeyColumns, authorColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	foreigners := []*Authorreview{&b, &c, &d, &e}
-	for _, x := range foreigners {
-		if err = randomize.Struct(seed, x, authorreviewDBTypes, false, strmangle.SetComplement(authorreviewPrimaryKeyColumns, authorreviewColumnsWithoutDefault)...); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	err = a.AddAuthorreviews(ctx, tx, true, foreigners...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err := a.Authorreviews().Count(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 4 {
-		t.Error("count was wrong:", count)
-	}
-
-	err = a.RemoveAuthorreviews(ctx, tx, foreigners[:2]...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err = a.Authorreviews().Count(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 2 {
-		t.Error("count was wrong:", count)
-	}
-
-	if !queries.IsValuerNil(b.AuthorID) {
-		t.Error("want b's foreign key value to be nil")
-	}
-	if !queries.IsValuerNil(c.AuthorID) {
-		t.Error("want c's foreign key value to be nil")
-	}
-
-	if b.R.Author != nil {
-		t.Error("relationship was not removed properly from the foreign struct")
-	}
-	if c.R.Author != nil {
-		t.Error("relationship was not removed properly from the foreign struct")
-	}
-	if d.R.Author != &a {
-		t.Error("relationship to a should have been preserved")
-	}
-	if e.R.Author != &a {
-		t.Error("relationship to a should have been preserved")
-	}
-
-	if len(a.R.Authorreviews) != 2 {
-		t.Error("should have preserved two relationships")
-	}
-
-	// Removal doesn't do a stable deletion for performance so we have to flip the order
-	if a.R.Authorreviews[1] != &d {
-		t.Error("relationship to d should have been preserved")
-	}
-	if a.R.Authorreviews[0] != &e {
-		t.Error("relationship to e should have been preserved")
-	}
-}
-
 func testAuthorToManyAddOpBooks(t *testing.T) {
 	var err error
 

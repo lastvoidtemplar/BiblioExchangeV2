@@ -26,7 +26,7 @@ import (
 type Authorreview struct {
 	AuthorReviewsID string      `boil:"author_reviews_id" json:"author_reviews_id" toml:"author_reviews_id" yaml:"author_reviews_id"`
 	RootID          null.String `boil:"root_id" json:"root_id,omitempty" toml:"root_id" yaml:"root_id,omitempty"`
-	AuthorID        null.String `boil:"author_id" json:"author_id,omitempty" toml:"author_id" yaml:"author_id,omitempty"`
+	AuthorID        string      `boil:"author_id" json:"author_id" toml:"author_id" yaml:"author_id"`
 	UserID          string      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 	Content         null.String `boil:"content" json:"content,omitempty" toml:"content" yaml:"content,omitempty"`
 
@@ -67,13 +67,13 @@ var AuthorreviewTableColumns = struct {
 var AuthorreviewWhere = struct {
 	AuthorReviewsID whereHelperstring
 	RootID          whereHelpernull_String
-	AuthorID        whereHelpernull_String
+	AuthorID        whereHelperstring
 	UserID          whereHelperstring
 	Content         whereHelpernull_String
 }{
 	AuthorReviewsID: whereHelperstring{field: "\"authorreviews\".\"author_reviews_id\""},
 	RootID:          whereHelpernull_String{field: "\"authorreviews\".\"root_id\""},
-	AuthorID:        whereHelpernull_String{field: "\"authorreviews\".\"author_id\""},
+	AuthorID:        whereHelperstring{field: "\"authorreviews\".\"author_id\""},
 	UserID:          whereHelperstring{field: "\"authorreviews\".\"user_id\""},
 	Content:         whereHelpernull_String{field: "\"authorreviews\".\"content\""},
 }
@@ -127,8 +127,8 @@ type authorreviewL struct{}
 
 var (
 	authorreviewAllColumns            = []string{"author_reviews_id", "root_id", "author_id", "user_id", "content"}
-	authorreviewColumnsWithoutDefault = []string{"user_id"}
-	authorreviewColumnsWithDefault    = []string{"author_reviews_id", "root_id", "author_id", "content"}
+	authorreviewColumnsWithoutDefault = []string{"author_id", "user_id"}
+	authorreviewColumnsWithDefault    = []string{"author_reviews_id", "root_id", "content"}
 	authorreviewPrimaryKeyColumns     = []string{"author_reviews_id"}
 	authorreviewGeneratedColumns      = []string{}
 )
@@ -500,9 +500,7 @@ func (authorreviewL) LoadAuthor(ctx context.Context, e boil.ContextExecutor, sin
 		if object.R == nil {
 			object.R = &authorreviewR{}
 		}
-		if !queries.IsNil(object.AuthorID) {
-			args = append(args, object.AuthorID)
-		}
+		args = append(args, object.AuthorID)
 
 	} else {
 	Outer:
@@ -512,14 +510,12 @@ func (authorreviewL) LoadAuthor(ctx context.Context, e boil.ContextExecutor, sin
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.AuthorID) {
+				if a == obj.AuthorID {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.AuthorID) {
-				args = append(args, obj.AuthorID)
-			}
+			args = append(args, obj.AuthorID)
 
 		}
 	}
@@ -577,7 +573,7 @@ func (authorreviewL) LoadAuthor(ctx context.Context, e boil.ContextExecutor, sin
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.AuthorID, foreign.AuthorID) {
+			if local.AuthorID == foreign.AuthorID {
 				local.R.Author = foreign
 				if foreign.R == nil {
 					foreign.R = &authorR{}
@@ -864,7 +860,7 @@ func (o *Authorreview) SetAuthor(ctx context.Context, exec boil.ContextExecutor,
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.AuthorID, related.AuthorID)
+	o.AuthorID = related.AuthorID
 	if o.R == nil {
 		o.R = &authorreviewR{
 			Author: related,
@@ -881,47 +877,6 @@ func (o *Authorreview) SetAuthor(ctx context.Context, exec boil.ContextExecutor,
 		related.R.Authorreviews = append(related.R.Authorreviews, o)
 	}
 
-	return nil
-}
-
-// RemoveAuthorG relationship.
-// Sets o.R.Author to nil.
-// Removes o from all passed in related items' relationships struct.
-// Uses the global database handle.
-func (o *Authorreview) RemoveAuthorG(ctx context.Context, related *Author) error {
-	return o.RemoveAuthor(ctx, boil.GetContextDB(), related)
-}
-
-// RemoveAuthor relationship.
-// Sets o.R.Author to nil.
-// Removes o from all passed in related items' relationships struct.
-func (o *Authorreview) RemoveAuthor(ctx context.Context, exec boil.ContextExecutor, related *Author) error {
-	var err error
-
-	queries.SetScanner(&o.AuthorID, nil)
-	if _, err = o.Update(ctx, exec, boil.Whitelist("author_id")); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	if o.R != nil {
-		o.R.Author = nil
-	}
-	if related == nil || related.R == nil {
-		return nil
-	}
-
-	for i, ri := range related.R.Authorreviews {
-		if queries.Equal(o.AuthorID, ri.AuthorID) {
-			continue
-		}
-
-		ln := len(related.R.Authorreviews)
-		if ln > 1 && i < ln-1 {
-			related.R.Authorreviews[i] = related.R.Authorreviews[ln-1]
-		}
-		related.R.Authorreviews = related.R.Authorreviews[:ln-1]
-		break
-	}
 	return nil
 }
 

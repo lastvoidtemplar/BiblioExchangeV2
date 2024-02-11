@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS AuthorPageRatings(
 CREATE TABLE IF NOT EXISTS AuthorReviews (
     author_reviews_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     root_id UUID REFERENCES AuthorReviews(author_reviews_id)  ON DELETE CASCADE,
-    author_id UUID REFERENCES Author(author_id)  ON DELETE CASCADE,
+    author_id UUID NOT NULL REFERENCES Author(author_id) ON DELETE CASCADE,
     user_id UUID  NOT NULL,
     content VARCHAR(500)
 ); 
