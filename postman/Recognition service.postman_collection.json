@@ -1,0 +1,39 @@
+{
+	"info": {
+		"_postman_id": "4bdbe6de-ed83-4707-93be-24206fa90320",
+		"name": "Recognition service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29206031"
+	},
+	"item": [
+		{
+			"name": "ISBN barcode reader",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "image",
+							"type": "file",
+							"src": "/home/dyan/Downloads/427745998_937376734661445_5354524920128116398_n.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:4000/read_barcode",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "4000",
+					"path": [
+						"read_barcode"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
