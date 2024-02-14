@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package upload_server;
+
+option go_package = "../upload/upload_server";
+
+service UploadServer{
+    rpc GeneratePresignedURL(PresighedURLRequest) returns (PresighedURLResponse);
+}
+
+message PresighedURLRequest{
+    string file_id = 1;
+    string user_id = 2;
+    repeated string allowedFormats = 3;
+    uint64 maxSize = 4;
+    string isoTimeOfExpiration = 5;
+    string callbackAdrr = 6;
+}
+
+message PresighedURLResponse{
+    string url = 1;
+}

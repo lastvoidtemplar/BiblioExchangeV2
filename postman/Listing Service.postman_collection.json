@@ -1,0 +1,177 @@
+{
+	"info": {
+		"_postman_id": "aa5b70b2-b980-4897-9ab4-f9ea0a9f6b84",
+		"name": "Listing Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29206031"
+	},
+	"item": [
+		{
+			"name": "Listing",
+			"item": [
+				{
+					"name": "Create a listing",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "useBrowser",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://localhost:8080",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "dummy",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://localhost:8080/realms/master/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://localhost:8080/realms/master/protocol/openid-connect/auth",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"listing1\",\n    \"prize\": 10,\n    \"currency\": \"lv\",\n    \"books\": [\"945c5bd4-4506-4ed2-9116-08ffb0b31436\"],\n    \"files\": 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5004/listings",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5004",
+							"path": [
+								"listings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all listings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5004/listings/945c5bd4-4506-4ed2-9116-08ffb0b31436?page=1&limit=10",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5004",
+							"path": [
+								"listings",
+								"945c5bd4-4506-4ed2-9116-08ffb0b31436"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Upload",
+			"item": [
+				{
+					"name": "Upload file",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "useBrowser",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://localhost:8080",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "dummy",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://localhost:8080/realms/master/protocol/openid-connect/token",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://localhost:8080/realms/master/protocol/openid-connect/auth",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"listing1\",\n    \"prize\": 10,\n    \"currency\": \"lv\",\n    \"books\": [\"945c5bd4-4506-4ed2-9116-08ffb0b31436\"],\n    \"files\": 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5002/upload/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5002",
+							"path": [
+								"upload",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

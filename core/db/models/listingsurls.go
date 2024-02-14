@@ -24,44 +24,75 @@ import (
 
 // Listingsurl is an object representing the database table.
 type Listingsurl struct {
-	ResourseID  string      `boil:"resourse_id" json:"resourse_id" toml:"resourse_id" yaml:"resourse_id"`
-	ListingID   null.String `boil:"listing_id" json:"listing_id,omitempty" toml:"listing_id" yaml:"listing_id,omitempty"`
-	ResourseURL string      `boil:"resourse_url" json:"resourse_url" toml:"resourse_url" yaml:"resourse_url"`
+	ResourseID   string      `boil:"resourse_id" json:"resourse_id" toml:"resourse_id" yaml:"resourse_id"`
+	ListingID    null.String `boil:"listing_id" json:"listing_id,omitempty" toml:"listing_id" yaml:"listing_id,omitempty"`
+	ResourseURL  string      `boil:"resourse_url" json:"resourse_url" toml:"resourse_url" yaml:"resourse_url"`
+	UploadStatus null.Bool   `boil:"upload_status" json:"upload_status,omitempty" toml:"upload_status" yaml:"upload_status,omitempty"`
 
 	R *listingsurlR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L listingsurlL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var ListingsurlColumns = struct {
-	ResourseID  string
-	ListingID   string
-	ResourseURL string
+	ResourseID   string
+	ListingID    string
+	ResourseURL  string
+	UploadStatus string
 }{
-	ResourseID:  "resourse_id",
-	ListingID:   "listing_id",
-	ResourseURL: "resourse_url",
+	ResourseID:   "resourse_id",
+	ListingID:    "listing_id",
+	ResourseURL:  "resourse_url",
+	UploadStatus: "upload_status",
 }
 
 var ListingsurlTableColumns = struct {
-	ResourseID  string
-	ListingID   string
-	ResourseURL string
+	ResourseID   string
+	ListingID    string
+	ResourseURL  string
+	UploadStatus string
 }{
-	ResourseID:  "listingsurls.resourse_id",
-	ListingID:   "listingsurls.listing_id",
-	ResourseURL: "listingsurls.resourse_url",
+	ResourseID:   "listingsurls.resourse_id",
+	ListingID:    "listingsurls.listing_id",
+	ResourseURL:  "listingsurls.resourse_url",
+	UploadStatus: "listingsurls.upload_status",
 }
 
 // Generated where
 
+type whereHelpernull_Bool struct{ field string }
+
+func (w whereHelpernull_Bool) EQ(x null.Bool) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Bool) NEQ(x null.Bool) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Bool) LT(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Bool) LTE(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Bool) GT(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Bool) GTE(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+func (w whereHelpernull_Bool) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Bool) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 var ListingsurlWhere = struct {
-	ResourseID  whereHelperstring
-	ListingID   whereHelpernull_String
-	ResourseURL whereHelperstring
+	ResourseID   whereHelperstring
+	ListingID    whereHelpernull_String
+	ResourseURL  whereHelperstring
+	UploadStatus whereHelpernull_Bool
 }{
-	ResourseID:  whereHelperstring{field: "\"listingsurls\".\"resourse_id\""},
-	ListingID:   whereHelpernull_String{field: "\"listingsurls\".\"listing_id\""},
-	ResourseURL: whereHelperstring{field: "\"listingsurls\".\"resourse_url\""},
+	ResourseID:   whereHelperstring{field: "\"listingsurls\".\"resourse_id\""},
+	ListingID:    whereHelpernull_String{field: "\"listingsurls\".\"listing_id\""},
+	ResourseURL:  whereHelperstring{field: "\"listingsurls\".\"resourse_url\""},
+	UploadStatus: whereHelpernull_Bool{field: "\"listingsurls\".\"upload_status\""},
 }
 
 // ListingsurlRels is where relationship names are stored.
@@ -92,9 +123,9 @@ func (r *listingsurlR) GetListing() *Listing {
 type listingsurlL struct{}
 
 var (
-	listingsurlAllColumns            = []string{"resourse_id", "listing_id", "resourse_url"}
+	listingsurlAllColumns            = []string{"resourse_id", "listing_id", "resourse_url", "upload_status"}
 	listingsurlColumnsWithoutDefault = []string{"resourse_url"}
-	listingsurlColumnsWithDefault    = []string{"resourse_id", "listing_id"}
+	listingsurlColumnsWithDefault    = []string{"resourse_id", "listing_id", "upload_status"}
 	listingsurlPrimaryKeyColumns     = []string{"resourse_id"}
 	listingsurlGeneratedColumns      = []string{}
 )

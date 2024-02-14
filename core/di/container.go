@@ -12,6 +12,7 @@ import (
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/di/identificators"
 	"github.com/lastvoidtemplar/BiblioExchangeV2/core/middleware"
 	serveroptions "github.com/lastvoidtemplar/BiblioExchangeV2/core/server/server_options"
+	"github.com/lastvoidtemplar/BiblioExchangeV2/core/upload"
 	_ "github.com/lib/pq"
 )
 
@@ -60,6 +61,12 @@ func (b *ContainerBuilder) AddDatabase(opt dboptions.DatabaseOptions) *Container
 	}
 
 	return b.RegisterService(identificators.Database, db)
+}
+
+func (b *ContainerBuilder) AddUploadService() *ContainerBuilder {
+	uploadService := upload.NewUploadService()
+
+	return b.RegisterService(identificators.UploadService, uploadService)
 }
 
 func (b *ContainerBuilder) Build() *Container {
