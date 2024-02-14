@@ -738,7 +738,7 @@ func testListingsurlsSelect(t *testing.T) {
 }
 
 var (
-	listingsurlDBTypes = map[string]string{`ResourseID`: `uuid`, `ListingID`: `uuid`, `ResourseURL`: `character varying`}
+	listingsurlDBTypes = map[string]string{`ResourseID`: `uuid`, `ListingID`: `uuid`, `ResourseURL`: `character varying`, `UploadStatus`: `boolean`}
 	_                  = bytes.MinRead
 )
 

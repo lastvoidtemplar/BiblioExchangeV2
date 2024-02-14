@@ -51,7 +51,7 @@ func GetBooksPaginated(c *di.Container) echo.HandlerFunc {
 			return utils.ErrorHandler(c, http.StatusInternalServerError, err)
 		}
 		if !exist {
-			return utils.ErrorHandler(c, http.StatusBadRequest, "Wrong book id")
+			return utils.ErrorHandler(c, http.StatusBadRequest, "Wrong author id")
 		}
 
 		books, err := queries.GetAllBooks(ctx, tx, authorId, page, limit)

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package upload_client;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "../upload/upload_client";
+
+service UploadClient{
+    rpc OnSuccessfulUpload(CallbackSuccRequest) returns (google.protobuf.Empty);
+    rpc OnErrorWhenUploading(CallbackRequest) returns (google.protobuf.Empty);
+    rpc OnUrlExpiration(CallbackRequest) returns (google.protobuf.Empty);
+}
+
+message CallbackRequest{
+    string file_id = 1;
+}
+
+message CallbackSuccRequest{
+    string file_id= 1;
+    string url = 2;
+}

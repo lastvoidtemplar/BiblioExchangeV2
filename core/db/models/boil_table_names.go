@@ -16,6 +16,7 @@ var TableNames = struct {
 	Listingsbooks     string
 	Listingsurls      string
 	Messages          string
+	Uploadfiles       string
 }{
 	Author:            "author",
 	Authorpageratings: "authorpageratings",
@@ -29,4 +30,5 @@ var TableNames = struct {
 	Listingsbooks:     "listingsbooks",
 	Listingsurls:      "listingsurls",
 	Messages:          "messages",
+	Uploadfiles:       "uploadfiles",
 }

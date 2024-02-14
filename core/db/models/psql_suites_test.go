@@ -25,4 +25,6 @@ func TestUpsert(t *testing.T) {
 	t.Run("Listingsurls", testListingsurlsUpsert)
 
 	t.Run("Messages", testMessagesUpsert)
+
+	t.Run("Uploadfiles", testUploadfilesUpsert)
 }

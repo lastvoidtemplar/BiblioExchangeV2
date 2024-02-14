@@ -22,6 +22,7 @@ func TestParent(t *testing.T) {
 	t.Run("Listings", testListings)
 	t.Run("Listingsurls", testListingsurls)
 	t.Run("Messages", testMessages)
+	t.Run("Uploadfiles", testUploadfiles)
 }
 
 func TestDelete(t *testing.T) {
@@ -35,6 +36,7 @@ func TestDelete(t *testing.T) {
 	t.Run("Listings", testListingsDelete)
 	t.Run("Listingsurls", testListingsurlsDelete)
 	t.Run("Messages", testMessagesDelete)
+	t.Run("Uploadfiles", testUploadfilesDelete)
 }
 
 func TestQueryDeleteAll(t *testing.T) {
@@ -48,6 +50,7 @@ func TestQueryDeleteAll(t *testing.T) {
 	t.Run("Listings", testListingsQueryDeleteAll)
 	t.Run("Listingsurls", testListingsurlsQueryDeleteAll)
 	t.Run("Messages", testMessagesQueryDeleteAll)
+	t.Run("Uploadfiles", testUploadfilesQueryDeleteAll)
 }
 
 func TestSliceDeleteAll(t *testing.T) {
@@ -61,6 +64,7 @@ func TestSliceDeleteAll(t *testing.T) {
 	t.Run("Listings", testListingsSliceDeleteAll)
 	t.Run("Listingsurls", testListingsurlsSliceDeleteAll)
 	t.Run("Messages", testMessagesSliceDeleteAll)
+	t.Run("Uploadfiles", testUploadfilesSliceDeleteAll)
 }
 
 func TestExists(t *testing.T) {
@@ -74,6 +78,7 @@ func TestExists(t *testing.T) {
 	t.Run("Listings", testListingsExists)
 	t.Run("Listingsurls", testListingsurlsExists)
 	t.Run("Messages", testMessagesExists)
+	t.Run("Uploadfiles", testUploadfilesExists)
 }
 
 func TestFind(t *testing.T) {
@@ -87,6 +92,7 @@ func TestFind(t *testing.T) {
 	t.Run("Listings", testListingsFind)
 	t.Run("Listingsurls", testListingsurlsFind)
 	t.Run("Messages", testMessagesFind)
+	t.Run("Uploadfiles", testUploadfilesFind)
 }
 
 func TestBind(t *testing.T) {
@@ -100,6 +106,7 @@ func TestBind(t *testing.T) {
 	t.Run("Listings", testListingsBind)
 	t.Run("Listingsurls", testListingsurlsBind)
 	t.Run("Messages", testMessagesBind)
+	t.Run("Uploadfiles", testUploadfilesBind)
 }
 
 func TestOne(t *testing.T) {
@@ -113,6 +120,7 @@ func TestOne(t *testing.T) {
 	t.Run("Listings", testListingsOne)
 	t.Run("Listingsurls", testListingsurlsOne)
 	t.Run("Messages", testMessagesOne)
+	t.Run("Uploadfiles", testUploadfilesOne)
 }
 
 func TestAll(t *testing.T) {
@@ -126,6 +134,7 @@ func TestAll(t *testing.T) {
 	t.Run("Listings", testListingsAll)
 	t.Run("Listingsurls", testListingsurlsAll)
 	t.Run("Messages", testMessagesAll)
+	t.Run("Uploadfiles", testUploadfilesAll)
 }
 
 func TestCount(t *testing.T) {
@@ -139,6 +148,7 @@ func TestCount(t *testing.T) {
 	t.Run("Listings", testListingsCount)
 	t.Run("Listingsurls", testListingsurlsCount)
 	t.Run("Messages", testMessagesCount)
+	t.Run("Uploadfiles", testUploadfilesCount)
 }
 
 func TestHooks(t *testing.T) {
@@ -152,6 +162,7 @@ func TestHooks(t *testing.T) {
 	t.Run("Listings", testListingsHooks)
 	t.Run("Listingsurls", testListingsurlsHooks)
 	t.Run("Messages", testMessagesHooks)
+	t.Run("Uploadfiles", testUploadfilesHooks)
 }
 
 func TestInsert(t *testing.T) {
@@ -175,6 +186,8 @@ func TestInsert(t *testing.T) {
 	t.Run("Listingsurls", testListingsurlsInsertWhitelist)
 	t.Run("Messages", testMessagesInsert)
 	t.Run("Messages", testMessagesInsertWhitelist)
+	t.Run("Uploadfiles", testUploadfilesInsert)
+	t.Run("Uploadfiles", testUploadfilesInsertWhitelist)
 }
 
 // TestToOne tests cannot be run in parallel
@@ -297,6 +310,7 @@ func TestReload(t *testing.T) {
 	t.Run("Listings", testListingsReload)
 	t.Run("Listingsurls", testListingsurlsReload)
 	t.Run("Messages", testMessagesReload)
+	t.Run("Uploadfiles", testUploadfilesReload)
 }
 
 func TestReloadAll(t *testing.T) {
@@ -310,6 +324,7 @@ func TestReloadAll(t *testing.T) {
 	t.Run("Listings", testListingsReloadAll)
 	t.Run("Listingsurls", testListingsurlsReloadAll)
 	t.Run("Messages", testMessagesReloadAll)
+	t.Run("Uploadfiles", testUploadfilesReloadAll)
 }
 
 func TestSelect(t *testing.T) {
@@ -323,6 +338,7 @@ func TestSelect(t *testing.T) {
 	t.Run("Listings", testListingsSelect)
 	t.Run("Listingsurls", testListingsurlsSelect)
 	t.Run("Messages", testMessagesSelect)
+	t.Run("Uploadfiles", testUploadfilesSelect)
 }
 
 func TestUpdate(t *testing.T) {
@@ -336,6 +352,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("Listings", testListingsUpdate)
 	t.Run("Listingsurls", testListingsurlsUpdate)
 	t.Run("Messages", testMessagesUpdate)
+	t.Run("Uploadfiles", testUploadfilesUpdate)
 }
 
 func TestSliceUpdateAll(t *testing.T) {
@@ -349,4 +366,5 @@ func TestSliceUpdateAll(t *testing.T) {
 	t.Run("Listings", testListingsSliceUpdateAll)
 	t.Run("Listingsurls", testListingsurlsSliceUpdateAll)
 	t.Run("Messages", testMessagesSliceUpdateAll)
+	t.Run("Uploadfiles", testUploadfilesSliceUpdateAll)
 }
