@@ -71,8 +71,8 @@ type BookBodyDTO struct {
 }
 
 func (dto *BookBodyDTO) Valid() (errors validation.ValidationErrorsSlice) {
-	if len(dto.Isbn) != 10 {
-		errors.Add(fmt.Errorf("book ISBN must be 10 characters long"))
+	if len(dto.Isbn) > 20 {
+		errors.Add(fmt.Errorf("book ISBN must be less than 20 characters long"))
 	}
 
 	if len(dto.Title) < 4 {
