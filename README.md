@@ -47,3 +47,33 @@ Then go to [Keycloak Console](http://localhost:8080/realms/master/protocol/openi
 - username: admin  
 - password: admin
 
+Create client
+## Object Store Access
+
+First make sure that minikube tunnel is active:
+
+```
+minikube tunnel --bind-address='127.0.0.1'
+```
+
+Then go to [Minio Console](http://localhost:9090/login)  
+- username: minioadmin  
+- password: minioadmin
+
+Create bucket called bucket "bucket"
+And Access Keys
+
+## Run services
+
+For now service must be run locally with:
+
+```
+go run main.go
+```
+OR below for rerecognition service
+```
+python3 main.py
+```
+
+The golang services have config file in config folder for configuration.
+In the future configuration will be done by .env files and load environment function.

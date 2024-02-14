@@ -36,3 +36,10 @@ for file in ./k8s/pgadmin/*
 do
   kubectl apply -f $file
 done
+
+echo
+echo "Deploying minio..."
+for file in ./k8s/minio/*
+do
+  kubectl apply -f $file
+done
